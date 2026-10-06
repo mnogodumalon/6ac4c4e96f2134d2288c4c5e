@@ -20,6 +20,7 @@
 import type { ComponentType } from 'react';
 
 // <custom:intent-imports>
+import { IconUserCheck, IconArrowRightBar, IconPhoneCall, IconSitemap } from '@tabler/icons-react';
 // </custom:intent-imports>
 
 export interface IntentLink {
@@ -42,6 +43,10 @@ export interface IntentLink {
 
 export const INTENTS: IntentLink[] = [
   // <custom:intents>
+  { path: '/intents/lead-qualifizieren', label: { de: 'Lead qualifizieren', en: 'Qualify lead' }, icon: IconUserCheck, description: 'Einen Lead bewerten und qualifizieren oder mit Grund disqualifizieren.' },
+  { path: '/intents/chance-phase-wechseln', label: { de: 'Chance weiterführen', en: 'Advance opportunity' }, icon: IconArrowRightBar, description: 'Eine Chance in die nächste Funnel-Phase bringen, bei Abschluss mit Grund, Datum und Volumen.' },
+  { path: '/intents/aktivitaet-erfassen', label: { de: 'Aktivität erfassen', en: 'Log activity' }, icon: IconPhoneCall, description: 'Anruf, Termin oder E-Mail zu Firma, Ansprechpartner, Lead oder Chance festhalten, mit Folgeaufgabe.' },
+  { path: '/intents/kundenstruktur-anlegen', label: { de: 'Kundenstruktur anlegen', en: 'Build customer structure' }, icon: IconSitemap, description: 'Eine Firma in die Hierarchie einordnen und gleich den ersten Ansprechpartner anlegen.' },
   // </custom:intents>
 ];
 
@@ -52,7 +57,7 @@ export const INTENTS: IntentLink[] = [
  * purpose — a scaffold update resets it to false (self-healing if Phase 2
  * never ran).
  */
-export const INTENTS_PENDING = true;
+export const INTENTS_PENDING = false;
 
 /**
  * When the Phase-1 bundle was deployed (ISO, set by the service together with

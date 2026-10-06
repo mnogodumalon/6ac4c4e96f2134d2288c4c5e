@@ -39,12 +39,12 @@ const MAP_PATH = '/verwaltung/anwendung';
 const AGENT_MINUTES = 3;
 const DEV_KEY = 'developer-mode';
 
-// `phase`, not `status`: check-lookup-keys scans src/pages for `<lookup field>: '<literal>'`
+// `ui`, not `phase`/`status`: check-lookup-keys scans src/pages for `<lookup field>: '<literal>'`
 // and an app with a lookup field named `status` (inclou's Berater) went red on this
 // local UI state — a repair agent then rewrote a generator-owned file (01.10.2026).
-type SaveState = { phase: 'idle' } | { phase: 'saving' } | { phase: 'error'; message: string };
+type SaveState = { ui: 'idle' } | { ui: 'saving' } | { ui: 'error'; message: string };
 type Toast = { id: number; text: string; bad?: boolean; actions?: { label: string; clock?: boolean; fn: () => void }[] };
-const IDLE: SaveState = { phase: 'idle' };
+const IDLE: SaveState = { ui: 'idle' };
 
 const SCHEDULE_PRESETS: { value: string; label: () => string }[] = [
   { value: '0 6 * * *', label: () => t('am_daily_at', { time: '6:00' }) },
@@ -232,7 +232,7 @@ export default function AppMap() {
 
   const setState = (id: string, s: SaveState) => setStates(prev => ({ ...prev, [id]: s }));
   const run = async (line: MapLine, call: () => ReturnType<typeof answerLine>, kept = false) => {
-    setState(line.id, { phase: 'saving' });
+    setState(line.id, { ui: 'saving' });
     try {
       const res = await call();
       setSt(prev => prev ? { ...prev, map: res.map, planVersion: res.plan_version ?? prev.planVersion, changes: res.changes ?? prev.changes } : prev);
@@ -243,7 +243,7 @@ export default function AppMap() {
       const actions = change?.undo ? [{ label: t('am_undo'), fn: () => undo(change) }] : undefined;
       toast(kept ? t('am_kept') : t('am_changed'), actions, false, 10000);
     } catch (e) {
-      setState(line.id, { phase: 'error', message: e instanceof Error ? e.message : String(e) });
+      setState(line.id, { ui: 'error', message: e instanceof Error ? e.message : String(e) });
     }
   };
   const save = (line: MapLine, value: unknown) => run(line, () => answerLine(line.id, value));
@@ -499,7 +499,7 @@ function LineRow({ line, card, more, flowLink }: { line: MapLine; card?: boolean
   const state = c.states[line.id] ?? IDLE;
   const job = jobFor(c.jobs, line.id);
   const blocked = job?.status === 'running';
-  const busy = state.phase === 'saving' || blocked;
+  const busy = state.ui === 'saving' || blocked;
   const editing = c.editing === line.id && !!e?.ready;
   const slow = speedOf(line) === 'minutes';
   const canEdit = c.canChange && !!e?.ready && !editing;
@@ -755,8 +755,8 @@ function HistoryView({ changes, onUndo, onBack, dev }: { changes: PlanChange[]; 
 /* ── shared pieces ────────────────────────────────────────────────────── */
 
 function StateLine({ state }: { state: SaveState }) {
-  if (state.phase === 'saving') return <p className="mt-1 text-xs text-muted-foreground">{t('am_saving')}</p>;
-  if (state.phase === 'error') return <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><IconAlertCircle size={14} aria-hidden="true" />{state.message}</p>;
+  if (state.ui === 'saving') return <p className="mt-1 text-xs text-muted-foreground">{t('am_saving')}</p>;
+  if (state.ui === 'error') return <p role="alert" className="mt-1 flex items-center gap-1 text-xs text-destructive"><IconAlertCircle size={14} aria-hidden="true" />{state.message}</p>;
   return null;
 }
 
