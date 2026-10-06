@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "language": "de",
+  "understanding": {
+    "summary": "Eine CRM-Anwendung für Vertrieb und Kundenbetreuung neben dem bestehenden Planungssystem. Sie verfolgt Leads von der Erfassung bis zur Umwandlung, steuert Chancen durch den Salesfunnel und gibt Kundenmanagern einen Gesamtüberblick über Firmen, Ansprechpartner, Chancen und Aktivitäten. Komplexe Kundenstrukturen (Konzern, Tochter, Standort, Abteilung) werden als Hierarchie abgebildet. Chancen führen jährliches und gesamtes Vertragsvolumen.",
+    "roles": [
+      "Kundenmanager",
+      "Vertrieb",
+      "Vertriebsleitung"
+    ],
+    "main_tasks": [
+      "Leads erfassen, bewerten und qualifizieren",
+      "Lead in Firma, Ansprechpartner und Chance umwandeln",
+      "Chancen durch die Funnel-Phasen führen",
+      "Aktivitäten und Folgeaufgaben festhalten",
+      "Kundenstruktur als Hierarchie pflegen",
+      "Gesamtüberblick über einen Kunden gewinnen"
+    ],
+    "platform_roles": [
+      {
+        "persona": "Kundenmanager",
+        "role": "standard",
+        "apps": [
+          "firmen",
+          "ansprechpartner",
+          "leads",
+          "chancen",
+          "aktivitaeten"
+        ]
+      },
+      {
+        "persona": "Vertrieb",
+        "role": "standard",
+        "apps": [
+          "leads",
+          "chancen",
+          "aktivitaeten",
+          "ansprechpartner",
+          "firmen"
+        ]
+      },
+      {
+        "persona": "Vertriebsleitung",
+        "role": "datenverarbeitung",
+        "apps": [
+          "firmen",
+          "ansprechpartner",
+          "leads",
+          "chancen",
+          "aktivitaeten"
+        ]
+      }
+    ]
+  },
+  "flows": [
+    {
+      "slug": "lead-qualifizieren",
+      "label": {
+        "de": "Lead qualifizieren",
+        "en": "Qualify lead"
+      },
+      "description": "Einen Lead bewerten und qualifizieren oder mit Grund disqualifizieren.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "leads",
+          "op": "update",
+          "when": "always",
+          "fields": {
+            "leadstatus": "user",
+            "bewertung": "user",
+            "disqualifizierungsgrund": "user"
+          },
+          "needs": {}
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `lead-qualifizieren` — Lead qualifizieren\nEinen Lead bewerten und qualifizieren oder mit Grund disqualifizieren.\n\n## Your hook — import it, never rebuild what it owns\n`import { useLeadQualifizierenFlow } from '@/lib/journey/flows/LeadQualifizieren';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. This flow CHANGES a record of `leads`: `{...flow.picks.leads.select} {...flow.pick('leads')}` picks it, the hook prefills the form with its current values and updates THAT record — never a create step, never a list from useDashboardData. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Lead auswählen\n2. Bewertung wählen\n3. Status Qualifiziert oder Disqualifiziert setzen\n4. Bei Disqualifizierung Grund erfassen\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- updates `leads`:\n    - `leadstatus`: the user enters it (bind it through the layer: form.field/…)\n    - `bewertung`: the user enters it (bind it through the layer: form.field/…)\n    - `disqualifizierungsgrund`: the user enters it (bind it through the layer: form.field/…)\n\n## Reads\n- `leads` columns vorname, nachname, firmenname, herkunft, interesse, leadstatus, bewertung\n\n## Success page\n- shows: `leads.leadstatus`, `leads.bewertung`\n\n## Never write these — another flow or a tool owns them\n- `chancen.phase` (owner: intent `chance-phase-wechseln`)\n- `chancen.wahrscheinlichkeit` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_jaehrlich` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_gesamt` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussdatum` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussgrund` (owner: intent `chance-phase-wechseln`)\n- `chancen.wettbewerber` (owner: intent `chance-phase-wechseln`)\n- `chancen.auftragsnummer_planungssystem` (owner: intent `chance-phase-wechseln`)\n- `aktivitaeten.art` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.zeitpunkt` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.betreff` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.beschreibung` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ergebnis` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.folgeaufgabe` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.faelligkeit` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_vorname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_nachname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.firma` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ansprechpartner` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.lead` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.chance` (owner: intent `aktivitaet-erfassen`)\n- `firmen.firmenname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.strukturebene` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenstatus` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.branche` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.umsatzpotenzial` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_vorname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_nachname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.uebergeordnete_firma` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.vorname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.nachname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.position` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.email` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.entscheider` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.firma` (owner: intent `kundenstruktur-anlegen`)\n"
+    },
+    {
+      "slug": "chance-phase-wechseln",
+      "label": {
+        "de": "Chance weiterführen",
+        "en": "Advance opportunity"
+      },
+      "description": "Eine Chance in die nächste Funnel-Phase bringen, bei Abschluss mit Grund, Datum und Volumen.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "chancen",
+          "op": "update",
+          "when": "always",
+          "fields": {
+            "phase": "user",
+            "wahrscheinlichkeit": "user",
+            "vertragsvolumen_jaehrlich": "user",
+            "vertragsvolumen_gesamt": "user",
+            "abschlussdatum": "user",
+            "abschlussgrund": "user",
+            "wettbewerber": "user",
+            "auftragsnummer_planungssystem": "user"
+          },
+          "needs": {}
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `chance-phase-wechseln` — Chance weiterführen\nEine Chance in die nächste Funnel-Phase bringen, bei Abschluss mit Grund, Datum und Volumen.\n\n## Your hook — import it, never rebuild what it owns\n`import { useChancePhaseWechselnFlow } from '@/lib/journey/flows/ChancePhaseWechseln';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. This flow CHANGES a record of `chancen`: `{...flow.picks.chancen.select} {...flow.pick('chancen')}` picks it, the hook prefills the form with its current values and updates THAT record — never a create step, never a list from useDashboardData. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Offene Chance auswählen\n2. Neue Phase wählen\n3. Bei Gewonnen oder Verloren Grund erfassen\n4. Wahrscheinlichkeit und Volumen prüfen\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- updates `chancen`:\n    - `phase`: the user enters it (bind it through the layer: form.field/…)\n    - `wahrscheinlichkeit`: the user enters it (bind it through the layer: form.field/…)\n    - `vertragsvolumen_jaehrlich`: the user enters it (bind it through the layer: form.field/…)\n    - `vertragsvolumen_gesamt`: the user enters it (bind it through the layer: form.field/…)\n    - `abschlussdatum`: the user enters it (bind it through the layer: form.field/…)\n    - `abschlussgrund`: the user enters it (bind it through the layer: form.field/…)\n    - `wettbewerber`: the user enters it (bind it through the layer: form.field/…)\n    - `auftragsnummer_planungssystem`: the user enters it (bind it through the layer: form.field/…)\n\n## Reads\n- `chancen` columns bezeichnung, firma, phase, vertragsvolumen_jaehrlich, vertragsvolumen_gesamt, abschlussdatum\n\n## Success page\n- shows: `chancen.phase`\n- next flows to offer: `aktivitaet-erfassen`\n\n## Never write these — another flow or a tool owns them\n- `leads.leadstatus` (owner: intent `lead-qualifizieren`)\n- `leads.bewertung` (owner: intent `lead-qualifizieren`)\n- `leads.disqualifizierungsgrund` (owner: intent `lead-qualifizieren`)\n- `aktivitaeten.art` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.zeitpunkt` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.betreff` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.beschreibung` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ergebnis` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.folgeaufgabe` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.faelligkeit` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_vorname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_nachname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.firma` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ansprechpartner` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.lead` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.chance` (owner: intent `aktivitaet-erfassen`)\n- `firmen.firmenname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.strukturebene` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenstatus` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.branche` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.umsatzpotenzial` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_vorname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_nachname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.uebergeordnete_firma` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.vorname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.nachname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.position` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.email` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.entscheider` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.firma` (owner: intent `kundenstruktur-anlegen`)\n"
+    },
+    {
+      "slug": "aktivitaet-erfassen",
+      "label": {
+        "de": "Aktivität erfassen",
+        "en": "Log activity"
+      },
+      "description": "Anruf, Termin oder E-Mail zu Firma, Ansprechpartner, Lead oder Chance festhalten, mit Folgeaufgabe.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "aktivitaeten",
+          "op": "create",
+          "when": "always",
+          "fields": {
+            "art": "user",
+            "zeitpunkt": "user",
+            "betreff": "user",
+            "beschreibung": "user",
+            "ergebnis": "user",
+            "folgeaufgabe": "user",
+            "faelligkeit": "user",
+            "durchgefuehrt_vorname": "user",
+            "durchgefuehrt_nachname": "user",
+            "firma": "picked",
+            "ansprechpartner": "picked",
+            "lead": "picked",
+            "chance": "picked"
+          },
+          "needs": {}
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `aktivitaet-erfassen` — Aktivität erfassen\nAnruf, Termin oder E-Mail zu Firma, Ansprechpartner, Lead oder Chance festhalten, mit Folgeaufgabe.\n\n## Your hook — import it, never rebuild what it owns\n`import { useAktivitaetErfassenFlow } from '@/lib/journey/flows/AktivitaetErfassen';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick: firma, ansprechpartner, lead, chance), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Bezug wählen (Firma, Chance oder Lead)\n2. Art, Zeitpunkt und Betreff erfassen\n3. Ergebnis und Folgeaufgabe mit Fälligkeit eintragen\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- creates `aktivitaeten`:\n    - `art`: the user enters it (bind it through the layer: form.field/…)\n    - `zeitpunkt`: the user enters it (bind it through the layer: form.field/…)\n    - `betreff`: the user enters it (bind it through the layer: form.field/…)\n    - `beschreibung`: the user enters it (bind it through the layer: form.field/…)\n    - `ergebnis`: the user enters it (bind it through the layer: form.field/…)\n    - `folgeaufgabe`: the user enters it (bind it through the layer: form.field/…)\n    - `faelligkeit`: the user enters it (bind it through the layer: form.field/…)\n    - `durchgefuehrt_vorname`: the user enters it (bind it through the layer: form.field/…)\n    - `durchgefuehrt_nachname`: the user enters it (bind it through the layer: form.field/…)\n    - `firma`: from the record the user picks in this flow\n    - `ansprechpartner`: from the record the user picks in this flow\n    - `lead`: from the record the user picks in this flow\n    - `chance`: from the record the user picks in this flow\n\n## Reads\n- `firmen` columns firmenname, ort\n- `chancen` columns bezeichnung, firma, phase\n\n## Success page\n- shows: `aktivitaeten.betreff`\n\n## Never write these — another flow or a tool owns them\n- `leads.leadstatus` (owner: intent `lead-qualifizieren`)\n- `leads.bewertung` (owner: intent `lead-qualifizieren`)\n- `leads.disqualifizierungsgrund` (owner: intent `lead-qualifizieren`)\n- `chancen.phase` (owner: intent `chance-phase-wechseln`)\n- `chancen.wahrscheinlichkeit` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_jaehrlich` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_gesamt` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussdatum` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussgrund` (owner: intent `chance-phase-wechseln`)\n- `chancen.wettbewerber` (owner: intent `chance-phase-wechseln`)\n- `chancen.auftragsnummer_planungssystem` (owner: intent `chance-phase-wechseln`)\n- `firmen.firmenname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.strukturebene` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenstatus` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.branche` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.umsatzpotenzial` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_vorname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.kundenmanager_nachname` (owner: intent `kundenstruktur-anlegen`)\n- `firmen.uebergeordnete_firma` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.vorname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.nachname` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.position` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.email` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.entscheider` (owner: intent `kundenstruktur-anlegen`)\n- `ansprechpartner.firma` (owner: intent `kundenstruktur-anlegen`)\n"
+    },
+    {
+      "slug": "kundenstruktur-anlegen",
+      "label": {
+        "de": "Kundenstruktur anlegen",
+        "en": "Build customer structure"
+      },
+      "description": "Eine Firma in die Hierarchie einordnen und gleich den ersten Ansprechpartner anlegen.",
+      "priority": "nice",
+      "writes": [
+        {
+          "entity": "firmen",
+          "op": "create",
+          "when": "always",
+          "fields": {
+            "firmenname": "user",
+            "strukturebene": "user",
+            "kundenstatus": "user",
+            "branche": "user",
+            "umsatzpotenzial": "user",
+            "kundenmanager_vorname": "user",
+            "kundenmanager_nachname": "user",
+            "uebergeordnete_firma": "picked"
+          },
+          "needs": {}
+        },
+        {
+          "entity": "ansprechpartner",
+          "op": "create",
+          "when": "optional",
+          "fields": {
+            "vorname": "user",
+            "nachname": "user",
+            "position": "user",
+            "email": "user",
+            "entscheider": "user",
+            "firma": "picked"
+          },
+          "needs": {}
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `kundenstruktur-anlegen` — Kundenstruktur anlegen\nEine Firma in die Hierarchie einordnen und gleich den ersten Ansprechpartner anlegen.\n\n## Your hook — import it, never rebuild what it owns\n`import { useKundenstrukturAnlegenFlow } from '@/lib/journey/flows/KundenstrukturAnlegen';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick: uebergeordnete_firma, firma), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Firma mit Rolle und Kundenstatus anlegen\n2. Übergeordnete Firma wählen\n3. Ersten Ansprechpartner erfassen\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- creates `firmen`:\n    - `firmenname`: the user enters it (bind it through the layer: form.field/…)\n    - `strukturebene`: the user enters it (bind it through the layer: form.field/…)\n    - `kundenstatus`: the user enters it (bind it through the layer: form.field/…)\n    - `branche`: the user enters it (bind it through the layer: form.field/…)\n    - `umsatzpotenzial`: the user enters it (bind it through the layer: form.field/…)\n    - `kundenmanager_vorname`: the user enters it (bind it through the layer: form.field/…)\n    - `kundenmanager_nachname`: the user enters it (bind it through the layer: form.field/…)\n    - `uebergeordnete_firma`: from the record the user picks in this flow\n- creates `ansprechpartner` (only when the flow needs it):\n    - `vorname`: the user enters it (bind it through the layer: form.field/…)\n    - `nachname`: the user enters it (bind it through the layer: form.field/…)\n    - `position`: the user enters it (bind it through the layer: form.field/…)\n    - `email`: the user enters it (bind it through the layer: form.field/…)\n    - `entscheider`: the user enters it (bind it through the layer: form.field/…)\n    - `firma`: from the record the user picks in this flow\n\n## Reads\n- `firmen` columns firmenname, strukturebene, ort\n\n## Success page\n- shows: `firmen.firmenname`\n- next flows to offer: `aktivitaet-erfassen`\n\n## Never write these — another flow or a tool owns them\n- `leads.leadstatus` (owner: intent `lead-qualifizieren`)\n- `leads.bewertung` (owner: intent `lead-qualifizieren`)\n- `leads.disqualifizierungsgrund` (owner: intent `lead-qualifizieren`)\n- `chancen.phase` (owner: intent `chance-phase-wechseln`)\n- `chancen.wahrscheinlichkeit` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_jaehrlich` (owner: intent `chance-phase-wechseln`)\n- `chancen.vertragsvolumen_gesamt` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussdatum` (owner: intent `chance-phase-wechseln`)\n- `chancen.abschlussgrund` (owner: intent `chance-phase-wechseln`)\n- `chancen.wettbewerber` (owner: intent `chance-phase-wechseln`)\n- `chancen.auftragsnummer_planungssystem` (owner: intent `chance-phase-wechseln`)\n- `aktivitaeten.art` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.zeitpunkt` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.betreff` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.beschreibung` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ergebnis` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.folgeaufgabe` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.faelligkeit` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_vorname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.durchgefuehrt_nachname` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.firma` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.ansprechpartner` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.lead` (owner: intent `aktivitaet-erfassen`)\n- `aktivitaeten.chance` (owner: intent `aktivitaet-erfassen`)\n"
+    }
+  ],
+  "public_pages": [],
+  "tools": [
+    {
+      "id": "ueberfaellige-chancen-melden",
+      "purpose": "Täglicher Sammelbericht per E-Mail an den Schlüsselinhaber über offene Chancen, deren erwartetes Abschlussdatum vorbei ist. Schreibt keine Felder."
+    },
+    {
+      "id": "folgeaufgaben-melden",
+      "purpose": "Täglicher Sammelbericht per E-Mail an den Schlüsselinhaber über Aktivitäten, deren Folgeaufgabe heute oder früher fällig ist. Schreibt keine Felder."
+    },
+    {
+      "id": "firma-bei-gewinn-zum-kunden",
+      "purpose": "Wird bei jeder Änderung einer Chance ausgelöst und prüft im Code, ob die Phase auf „Gewonnen“ steht. Dann wird die zugehörige Firma auf Kunde gesetzt."
+    }
+  ],
+  "covered_by_platform": [
+    {
+      "wish": "Gesamtüberblick über alle Informationen zum Kunden",
+      "feature": "list_page"
+    },
+    {
+      "wish": "Komplexe Kundenstrukturen als Hierarchie (Übergeordnete Firma)",
+      "feature": "record_form"
+    },
+    {
+      "wish": "Leads und Chancen suchen und filtern",
+      "feature": "search_filter"
+    },
+    {
+      "wish": "Verteilung der Chancen je Funnel-Phase",
+      "feature": "distribution_view"
+    },
+    {
+      "wish": "Änderungen an Kunden und Chancen nachvollziehen",
+      "feature": "record_history"
+    },
+    {
+      "wish": "Zugriff je Kundenmanager und Vertriebsleitung",
+      "feature": "user_roles"
+    }
+  ],
+  "ownership": {
+    "leads": {
+      "leadstatus": "intent:lead-qualifizieren",
+      "bewertung": "intent:lead-qualifizieren",
+      "disqualifizierungsgrund": "intent:lead-qualifizieren"
+    },
+    "chancen": {
+      "phase": "intent:chance-phase-wechseln",
+      "wahrscheinlichkeit": "intent:chance-phase-wechseln",
+      "vertragsvolumen_jaehrlich": "intent:chance-phase-wechseln",
+      "vertragsvolumen_gesamt": "intent:chance-phase-wechseln",
+      "abschlussdatum": "intent:chance-phase-wechseln",
+      "abschlussgrund": "intent:chance-phase-wechseln",
+      "wettbewerber": "intent:chance-phase-wechseln",
+      "auftragsnummer_planungssystem": "intent:chance-phase-wechseln"
+    },
+    "aktivitaeten": {
+      "art": "intent:aktivitaet-erfassen",
+      "zeitpunkt": "intent:aktivitaet-erfassen",
+      "betreff": "intent:aktivitaet-erfassen",
+      "beschreibung": "intent:aktivitaet-erfassen",
+      "ergebnis": "intent:aktivitaet-erfassen",
+      "folgeaufgabe": "intent:aktivitaet-erfassen",
+      "faelligkeit": "intent:aktivitaet-erfassen",
+      "durchgefuehrt_vorname": "intent:aktivitaet-erfassen",
+      "durchgefuehrt_nachname": "intent:aktivitaet-erfassen",
+      "firma": "intent:aktivitaet-erfassen",
+      "ansprechpartner": "intent:aktivitaet-erfassen",
+      "lead": "intent:aktivitaet-erfassen",
+      "chance": "intent:aktivitaet-erfassen"
+    },
+    "firmen": {
+      "firmenname": "intent:kundenstruktur-anlegen",
+      "strukturebene": "intent:kundenstruktur-anlegen",
+      "kundenstatus": "tool:firma-bei-gewinn-zum-kunden",
+      "branche": "intent:kundenstruktur-anlegen",
+      "umsatzpotenzial": "intent:kundenstruktur-anlegen",
+      "kundenmanager_vorname": "intent:kundenstruktur-anlegen",
+      "kundenmanager_nachname": "intent:kundenstruktur-anlegen",
+      "uebergeordnete_firma": "intent:kundenstruktur-anlegen"
+    },
+    "ansprechpartner": {
+      "vorname": "intent:kundenstruktur-anlegen",
+      "nachname": "intent:kundenstruktur-anlegen",
+      "position": "intent:kundenstruktur-anlegen",
+      "email": "intent:kundenstruktur-anlegen",
+      "entscheider": "intent:kundenstruktur-anlegen",
+      "firma": "intent:kundenstruktur-anlegen"
+    }
+  },
+  "dashboard": {
+    "focus": [
+      "Offene Chancen je Funnel-Phase",
+      "Jährliches und gesamtes Vertragsvolumen offener Chancen",
+      "Neue und unbearbeitete Leads",
+      "Fällige Folgeaufgaben aus Aktivitäten",
+      "Kunden nach Kundenstatus"
+    ],
+    "hints": [
+      "Chancen mit erwartetem Abschlussdatum in der Vergangenheit hervorheben",
+      "Leads nach Bewertung (heiß, warm, kalt) zeigen",
+      "Der Wert der Chance wird nicht mehr benötigt, nur jährliches und gesamtes Vertragsvolumen anzeigen"
+    ],
+    "wishes": []
+  }
+}

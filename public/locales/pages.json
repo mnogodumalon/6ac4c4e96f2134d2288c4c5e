@@ -1,0 +1,41 @@
+{
+  "pages": {
+    "en": {
+      "Aktivität erfassen": "Log Activity",
+      "Alle Leads sind in Bearbeitung.": "All leads are being processed.",
+      "Bald fällig": "Due Soon",
+      "Bewertung": "Rating",
+      "Chance öffnen": "Open Opportunity",
+      "Ersten Lead erfassen": "Add First Lead",
+      "Fällige Folgeaufgaben": "Due Follow-ups",
+      "Gesamtvolumen": "Total Volume",
+      "Jahr": "Year",
+      "Jährliches Volumen": "Annual Volume",
+      "Keine Folgeaufgaben in den nächsten 7 Tagen.": "No follow-up tasks in the next 7 days.",
+      "Kunden nach Kundenstatus": "Customers by Customer Status",
+      "Kundenstatus": "Customer Status",
+      "Leads nach Bewertung": "Leads by Rating",
+      "Lege deine erste Chance oder deinen ersten Lead an.": "Create your first opportunity or lead.",
+      "Neue Chance": "New Opportunity",
+      "Neue Leads": "New Leads",
+      "Neuer Lead": "New Lead",
+      "Noch keine Daten — starte mit deinem ersten Lead.": "No data yet — start with your first lead.",
+      "Offene Chancen": "Open Opportunities",
+      "Unbearbeitete Leads": "Unprocessed Leads",
+      "Unbewertet": "Unrated",
+      "Weiter: {0}": "Next: {0}",
+      "{0} ist die größte offene Chance.": "{0} is the largest open opportunity.",
+      "{0} wartet auf den ersten Kontakt.": "{0} is waiting for first contact.",
+      "{0} — Phase: {1}": "{0} — Stage: {1}",
+      "{0} — erledigt": "{0} — done",
+      "{0} — erwartetes Abschlussdatum ist verstrichen.": "{0} — expected close date has passed.",
+      "{0}: Folgeaufgaben warten auf dich.": "{0}: Follow-up tasks are waiting for you.",
+      "Überfällig": "Overdue",
+      "— Abschluss war am {0} erwartet.": "— Close was expected on {0}.",
+      "— Abschluss war seit dem {0} erwartet ({1} Chancen).": "— Close was expected since {0} ({1} opportunities).",
+      "✓ Erledigt": "✓ Done",
+      "✓ Kontaktiert": "✓ Contacted"
+    }
+  },
+  "v": 1
+}

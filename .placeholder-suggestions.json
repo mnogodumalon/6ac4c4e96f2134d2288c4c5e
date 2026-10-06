@@ -1,0 +1,67 @@
+{
+  "FirmenDialog.tsx": {
+    "firmenname": "z. B. Müller GmbH",
+    "branche": "z. B. Maschinenbau",
+    "kundennummer_planungssystem": "z. B. KD-10045",
+    "umsatzpotenzial": "z. B. 50000",
+    "strasse": "z. B. Hauptstraße",
+    "hausnummer": "z. B. 12a",
+    "plz": "z. B. 80331",
+    "ort": "z. B. München",
+    "email": "z. B. info@mueller.de",
+    "website": "z. B. https://mueller.de",
+    "kundenmanager_vorname": "z. B. Anna",
+    "kundenmanager_nachname": "z. B. Schmidt",
+    "uebergeordnete_firma": "Welche Firma steht darüber?"
+  },
+  "AnsprechpartnerDialog.tsx": {
+    "vorname": "z. B. Anna",
+    "nachname": "z. B. Müller",
+    "position": "z. B. Einkaufsleiterin",
+    "email": "z. B. anna.mueller@firma.de",
+    "firma": "Welche Firma?"
+  },
+  "LeadsDialog.tsx": {
+    "erfassungsdatum": "Wann wurde der Lead erfasst?",
+    "herkunft": "z. B. Website, Messe",
+    "kampagne": "z. B. Frühjahrsaktion 2026",
+    "vorname": "z. B. Anna",
+    "nachname": "z. B. Müller",
+    "firma": "Welche Firma?",
+    "firmenname": "z. B. Müller GmbH",
+    "email": "z. B. anna@mueller.de",
+    "interesse": "Woran besteht Interesse?",
+    "disqualifizierungsgrund": "Warum nicht passend?",
+    "verantwortlich_vorname": "z. B. Thomas",
+    "verantwortlich_nachname": "z. B. Schmidt"
+  },
+  "ChancenDialog.tsx": {
+    "bezeichnung": "z. B. Rahmenvertrag Wartung 2026",
+    "phase": "z. B. Angebot, Verhandlung",
+    "vertragsvolumen_jaehrlich": "z. B. 24000",
+    "vertragsvolumen_gesamt": "z. B. 72000",
+    "wahrscheinlichkeit": "z. B. 60",
+    "abschlussdatum": "Wann wird abgeschlossen?",
+    "abschlussgrund": "Warum gewonnen oder verloren?",
+    "wettbewerber": "z. B. Muster GmbH",
+    "auftragsnummer_planungssystem": "z. B. AU-2026-001",
+    "bemerkungen": "Weitere Hinweise zur Chance",
+    "firma": "Welche Firma?",
+    "ansprechpartner": "Welcher Ansprechpartner?",
+    "lead": "Welcher Lead?"
+  },
+  "AktivitaetenDialog.tsx": {
+    "zeitpunkt": "Wann fand es statt?",
+    "betreff": "z. B. Erstgespräch zum Angebot",
+    "beschreibung": "Was wurde besprochen?",
+    "ergebnis": "Was kam dabei heraus?",
+    "folgeaufgabe": "z. B. Angebot nachfassen",
+    "faelligkeit": "Bis wann erledigen?",
+    "durchgefuehrt_vorname": "z. B. Anna",
+    "durchgefuehrt_nachname": "z. B. Müller",
+    "firma": "Welche Firma?",
+    "ansprechpartner": "Welcher Ansprechpartner?",
+    "lead": "Welcher Lead?",
+    "chance": "Welche Chance?"
+  }
+}

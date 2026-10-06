@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "Firmen": {
+      "placeholders_set": 13,
+      "defaults_keys": [
+        "kundenstatus"
+      ],
+      "computed_keys": [],
+      "reason": "Reine Stammdaten ohne Mengen-, Datums- oder Preiskette, daher keine Formel; Kundenstatus startet als Interessent."
+    },
+    "Ansprechpartner": {
+      "placeholders_set": 5,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Reine Stammdaten ohne Datums- oder Mengenfelder, daher keine Formeln; das einzige numerische Feld der Firma ist kein Preis, der mit einer Menge verrechnet werden könnte."
+    },
+    "Leads": {
+      "placeholders_set": 12,
+      "defaults_keys": [
+        "erfassungsdatum",
+        "leadstatus"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formeln, da Leads Stammdaten ohne Mengen- oder Preisfelder sind und das Umsatzpotenzial der Firma keine Berechnung ergibt."
+    },
+    "Chancen": {
+      "placeholders_set": 13,
+      "defaults_keys": [
+        "phase"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formel, da das Gesamtvolumen von einer nicht vorhandenen Vertragslaufzeit abhängt und das einzige Lookup-Feld (umsatzpotenzial) keine sinnvolle Berechnung ergibt."
+    },
+    "Aktivitäten": {
+      "placeholders_set": 12,
+      "defaults_keys": [
+        "zeitpunkt"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formeln, da die Aktivitäten keine Datumspaare oder Mengen-/Preisfelder zum Berechnen enthalten."
+    }
+  }
+}
