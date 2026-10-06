@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
-import { addDays, format } from 'date-fns';
+import { useMemo, useState } from 'react';
+import { addDays, format, subDays } from 'date-fns';
 import { IconAlertTriangle, IconPlus, IconUserPlus } from '@tabler/icons-react';
+import { extractRecordId } from '@/services/livingAppsService';
+import { Input } from '@/components/ui/input';
 import type { DashboardData } from '@/hooks/useDashboardData';
 import { useEntityCrud } from '@/components/EntityCrud';
 import type { EnrichedChancen, EnrichedLeads, EnrichedAktivitaeten } from '@/types/enriched';
@@ -43,6 +45,16 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
   const { setChancen, setLeads, setAktivitaeten, fetchAll } = data;
   const clock = useClock();
   const today = format(clock, 'yyyy-MM-dd');
+  const since = format(subDays(clock, 90), 'yyyy-MM-dd');
+  const year = format(clock, 'yyyy');
+  const [target, setTarget] = useState<number>(() => {
+    const v = Number(localStorage.getItem('vertrieb-jahresziel'));
+    return v > 0 ? v : 250000;
+  });
+  const changeTarget = (v: number) => {
+    setTarget(v);
+    if (v > 0) localStorage.setItem('vertrieb-jahresziel', String(v));
+  };
   const weekEnd = format(addDays(clock, 7), 'yyyy-MM-dd');
 
   // Phase advance (shared: hero/kanban/overlay footer) — optimistic + Undo.
@@ -132,25 +144,49 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
   const yearly = openChancen.reduce((s, c) => s + (c.fields.vertragsvolumen_jaehrlich ?? 0), 0);
   const total = openChancen.reduce((s, c) => s + (c.fields.vertragsvolumen_gesamt ?? 0), 0);
 
-  const phaseColumns: KanbanColumn[] = (LOOKUP_OPTIONS['chancen']?.['phase'] ?? []).map(o => ({ key: o.key, label: o.label }));
-
-  const cards = useMemo<KanbanCard[]>(
-    () => [...enrichedChancen]
-      .sort((a, b) => (a.fields.abschlussdatum ?? '9999').localeCompare(b.fields.abschlussdatum ?? '9999'))
-      .map(c => {
-        const phase = lookupKey(c.fields.phase) ?? 'qualifizierung';
-        const vol = c.fields.vertragsvolumen_jaehrlich;
-        return {
-          id: `chance:${c.record_id}`,
-          column: phase,
-          title: c.fields.bezeichnung ?? c.firmaName,
-          subtitle: [c.firmaName, vol != null ? `${compactMoney(vol)} / ${tx('Jahr')}` : '', c.fields.abschlussdatum ? formatDate(c.fields.abschlussdatum) : '']
-            .filter(Boolean).join(' · '),
-          tone: overdueIds.has(c.record_id) ? 'warning' : phase === 'gewonnen' ? 'success' : 'default',
-        };
-      }),
-    [enrichedChancen, overdueIds],
-  );
+  // Mitarbeitende = Kundenmanager der Firma; Chancen/Aktivitäten werden über die Firma zugeordnet.
+  const noOwner = tx('Ohne Zuordnung');
+  const team = useMemo(() => {
+    const ownerOf = new Map<string, string>();
+    data.firmen.forEach(f => {
+      const n = `${f.fields.kundenmanager_vorname ?? ''} ${f.fields.kundenmanager_nachname ?? ''}`.trim();
+      if (n) ownerOf.set(f.record_id, n);
+    });
+    const rows = new Map<string, { name: string; won: number; wonCount: number; pipeline: number; weighted: number; acts: number }>();
+    const row = (name: string) => {
+      let r = rows.get(name);
+      if (!r) { r = { name, won: 0, wonCount: 0, pipeline: 0, weighted: 0, acts: 0 }; rows.set(name, r); }
+      return r;
+    };
+    ownerOf.forEach(n => row(n));
+    data.chancen.forEach(c => {
+      const fid = extractRecordId(c.fields.firma);
+      const r = row((fid && ownerOf.get(fid)) || noOwner);
+      const vol = c.fields.vertragsvolumen_jaehrlich ?? 0;
+      const phase = lookupKey(c.fields.phase) ?? '';
+      if (phase === 'gewonnen') {
+        if ((c.fields.abschlussdatum ?? year).slice(0, 4) === year) { r.won += vol; r.wonCount += 1; }
+      } else if (phase !== 'verloren') {
+        r.pipeline += vol;
+        r.weighted += vol * ((c.fields.wahrscheinlichkeit ?? 0) / 100);
+      }
+    });
+    data.aktivitaeten.forEach(a => {
+      if ((a.fields.zeitpunkt ?? '').slice(0, 10) < since) return;
+      const n = `${a.fields.durchgefuehrt_vorname ?? ''} ${a.fields.durchgefuehrt_nachname ?? ''}`.trim();
+      if (n) row(n).acts += 1;
+    });
+    return [...rows.values()]
+      .filter(r => r.name !== noOwner || r.won + r.pipeline > 0)
+      .sort((a, b) => b.won - a.won || b.weighted - a.weighted);
+  }, [data.firmen, data.chancen, data.aktivitaeten, year, since, noOwner]);
+  const quota = (won: number) => (target > 0 ? won / target : 0);
+  const assigned = team.filter(r => r.name !== noOwner);
+  const teamWon = team.reduce((s, r) => s + r.won, 0);
+  const teamTarget = target * Math.max(assigned.length, 1);
+  const reached = assigned.filter(r => quota(r.won) >= 1).length;
+  const behind = assigned.filter(r => quota(r.won) < 0.5);
+  const barTone = (q: number) => (q >= 1 ? 'bg-emerald-500' : q >= 0.5 ? 'bg-primary' : 'bg-amber-500');
 
   const findChance = (id: string) => data.chancen.find(c => c.record_id === id);
 
@@ -187,7 +223,11 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
 
   // Context line — names in every branch
   let context: string;
-  if (overdue.length > 0) {
+  if (behind.length > 0) {
+    context = tx`${nameList(behind.map(r => r.name))} liegt noch unter 50 % des Jahresziels.`;
+  } else if (assigned.length > 0 && reached > 0) {
+    context = tx`${nameList(assigned.filter(r => quota(r.won) >= 1).map(r => r.name))} hat das Jahresziel erreicht.`;
+  } else if (overdue.length > 0) {
     context = tx`${nameList(overdue.map(c => c.fields.bezeichnung ?? c.firmaName))} — erwartetes Abschlussdatum ist verstrichen.`;
   } else if (followUps.length > 0) {
     context = tx`${nameList(followUps.map(a => a.firmaName || (a.fields.betreff ?? '')))}: Folgeaufgaben warten auf dich.`;
@@ -252,28 +292,62 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
         ) : undefined}
         kpis={
           <StatStrip>
-            <StatStripItem title={tx('Offene Chancen')} value={openChancen.length} />
-            <StatStripItem title={tx('Jährliches Volumen')} value={compactMoney(yearly)} tone="primary" />
-            <StatStripItem title={tx('Gesamtvolumen')} value={compactMoney(total)} tone="primary" />
             <StatStripItem
-              title={tx('Neue Leads')}
-              value={newLeads.length}
-              tone={newLeads.length > 0 ? 'warning' : 'default'}
+              title={tx`Zielerfüllung Team ${year}`}
+              value={`${Math.round((teamWon / teamTarget) * 100)} %`}
+              tone={teamWon >= teamTarget ? 'success' : 'primary'}
             />
+            <StatStripItem title={tx('Gewonnen')} value={compactMoney(teamWon)} />
+            <StatStripItem title={tx('Ziel erreicht')} value={`${reached} / ${assigned.length}`} tone={reached > 0 ? 'success' : 'default'} />
+            <StatStripItem title={tx('Offene Pipeline')} value={compactMoney(yearly)} />
           </StatStrip>
         }
         primary={
-          <KanbanWidget
-            cards={cards}
-            columns={phaseColumns}
-            defaultCollapsed={['gewonnen', 'verloren']}
-            onCardClick={card => { const c = findChance(card.id.split(':')[1] ?? ''); if (c) crud.chancen.openDetail(c); }}
-            onCardMove={(cardId, newColumn) => {
-              const c = findChance(cardId.split(':')[1] ?? '');
-              if (c && lookupKey(c.fields.phase) !== newColumn) setPhase(c, newColumn);
-            }}
-            onAddCard={crud.chancen.canWrite ? (column => crud.chancen.openCreate({ phase: column })) : undefined}
-          />
+          // TODO(widget-gap): no widget shows per-person target progress; hand-built ranking
+          <div className="overflow-hidden rounded-xl border bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+              <div className="min-w-0">
+                <h2 className="font-semibold">{tx`Zielerfüllung je Mitarbeiter ${year}`}</h2>
+                <p className="text-xs text-muted-foreground">{tx('Gewonnenes Jahresvolumen im Verhältnis zum Ziel, zugeordnet über den Kundenmanager der Firma.')}</p>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{tx('Jahresziel / Person (€)')}</span>
+                <Input
+                  type="number" min={0} step={10000} value={target}
+                  onChange={e => changeTarget(Number(e.target.value))}
+                  className="w-32"
+                />
+              </label>
+            </div>
+            {team.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">{tx('Noch keine Kundenmanager an Firmen hinterlegt.')}</p>
+            ) : (
+              <ul className="divide-y">
+                {team.map((r, i) => {
+                  const q = quota(r.won);
+                  return (
+                    <li key={r.name} className="space-y-2 p-4">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <span className="min-w-0 truncate font-medium">{i + 1}. {r.name}</span>
+                        <span className="text-sm">
+                          <b>{compactMoney(r.won)}</b>
+                          <span className="text-muted-foreground"> / {compactMoney(target)} · {Math.round(q * 100)} %</span>
+                        </span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                        <div className={`h-full rounded-full ${barTone(q)}`} style={{ width: `${Math.min(q, 1) * 100}%` }} />
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>{tx`${r.wonCount} gewonnen`}</span>
+                        <span>{tx`Pipeline ${compactMoney(r.pipeline)} (gewichtet ${compactMoney(r.weighted)})`}</span>
+                        <span>{tx`${r.acts} Aktivitäten in 90 Tagen`}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         }
         aside={
           <>
